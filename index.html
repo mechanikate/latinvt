@@ -1,0 +1,374 @@
+
+<!DOCTYPE html>
+<html>
+
+<head>
+  <meta charset="utf-8">
+  <title>Latin Vocab Trainer</title>
+  <meta name="viewport" content="width=device-width">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&family=Roboto:wght@100&display=swap" rel="stylesheet">
+    <style>
+        html {
+            font-family: 'Roboto', sans-serif;
+        }
+        #submitanswermc {
+          align-items: center;
+          appearance: none;
+          background-color: #FCFCFD;
+          border-radius: 4px;
+          border-width: 0;
+          box-shadow: rgba(45, 35, 66, 0.4) 0 2px 4px,rgba(45, 35, 66, 0.3) 0 7px 13px -3px,#D6D6E7 0 -3px 0 inset;
+          box-sizing: border-box;
+          color: #36395A;
+          cursor: pointer;
+          display: inline-flex;
+          font-family: 'Roboto', sans-serif;
+          height: 24px;
+          justify-content: center;
+          line-height: 1;
+          list-style: none;
+          overflow: hidden;
+          padding-left: 16px;
+          padding-right: 16px;
+          position: relative;
+          text-align: left;
+          text-decoration: none;
+          transition: box-shadow .15s,transform .15s;
+          user-select: none;
+          -webkit-user-select: none;
+          touch-action: manipulation;
+          white-space: nowrap;
+          will-change: box-shadow,transform;
+          font-size: 18px;
+        }
+
+        #submitanswermc:focus {
+          box-shadow: #D6D6E7 0 0 0 1.5px inset, rgba(45, 35, 66, 0.4) 0 2px 4px, rgba(45, 35, 66, 0.3) 0 7px 13px -3px, #D6D6E7 0 -3px 0 inset;
+        }
+
+        #submitanswermc:hover {
+          box-shadow: rgba(45, 35, 66, 0.4) 0 4px 8px, rgba(45, 35, 66, 0.3) 0 7px 13px -3px, #D6D6E7 0 -3px 0 inset;
+          transform: translateY(-2px);
+        }
+
+        #submitanswermc:active {
+          box-shadow: #D6D6E7 0 3px 7px inset;
+          transform: translateY(2px);
+        }
+    </style>
+</head>
+
+<body>
+    <h2>Latin Vocab Trainer</h2>
+    LatinVT functions almost identically to Suburani's Vocabulary Trainer. There <i>can</i> be two correct options, I'm keeping it because fixing it would be a pain & it works anyways.
+	<h3 id="alerts"></h3>
+    <div id="selectchapters">
+        <input type="checkbox" id="chapter1">Chapter 1<br />
+        <input type="checkbox" id="chapter2">Chapter 2<br />
+        <input type="checkbox" id="chapter3">Chapter 3<br />
+        <input type="checkbox" id="chapter4">Chapter 4<br />
+        <input type="checkbox" id="chapter5">Chapter 5<br />
+        <input type="checkbox" id="chapter6">Chapter 6<br />
+        <input type="checkbox" id="chapter7">Chapter 7<br />
+        <button onclick="submitChapters();">Submit chapter choices</button>
+    </div>
+    <br />
+    <div id="mainthing" style="display: none;">
+        <h3>Correct: <span id="numcorr">0</span>, Incorrect: <span id="numincorr">0</span>, Time spent: <span id="timespent">0</span></h3>
+        What does "<span id="latinword">tu</span>" mean?
+        <br />
+        <div id="manualinput"><input type="text" id="usertranslation" placeholder="you" autocomplete="off"/><button onclick="submitAnswer(usertranslation.value); usertranslation.value='';" id="submitanswer">Submit</button></div>
+        <br />
+        <div id="multiplechoice">
+            <form>
+                <input type="radio" name="choice" value="A" required id="ansA"><span id="answerA">you</span><br />
+                <input type="radio" name="choice" value="B" id="ansB"><span id="answerB">u</span><br />
+                <input type="radio" name="choice" value="C" id="ansC"><span id="answerC">thou</span><br />
+                <input type="radio" name="choice" value="D" id="ansD"><span id="answerD">yo</span><br /><br />
+                <button onclick="submitMC();" id="submitanswermc">Submit</button>
+            </form>
+        <br />
+    </div>
+<script>
+var numberCorrect = 0;
+var numberIncorrect = 0;
+var timeSpent = 0;
+window.setInterval(() => {timeSpent+=1; display();},1000);
+function shuffleArray(array) {
+    for (let i = array.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [array[i], array[j]] = [array[j], array[i]];
+    }
+}
+function randomExcluded(min, max, excluded) {
+    var n = Math.floor(Math.random() * (max-min) + min);
+    if(typeof excluded === "object") {
+        var nums = Array.from(Array(max-min).keys()).map(i => i+min);
+        nums = nums.filter(i => !excluded.includes(i));
+        n = nums[Math.floor(Math.random() * nums.length)];
+    }
+    if(typeof excluded === "number") {
+        if (n >= excluded) n++;
+    }
+
+    return n;
+}
+
+const chapterData = [
+    { // Chapter 1
+        "dormio": ["sleep"],
+        "ego": ["i"],
+        "frater": ["brother"],
+        "hora": ["hour"],
+        "in": ["in", "on"],
+        "insula": ["apartment building", "apartment", "apartment block"],
+        "laboro":["i work","work"],
+        "lego":["read", "i read"],
+        "meus":["my"],
+        "non":["not"],
+        "pater":["father"],
+        "rideo":["i laugh", "i smile", "laugh", "smile"],
+        "servus": ["slave", "enslaved person"],
+        "tu": ["you"],
+        "turba": ["crowd"],
+        "ubi?": ["where?", "where"],
+        "via":["street", "road", "way"],
+        "sum":["am", "i am"],
+        "es":["you (singular) are", "you're", "you are", "are"],
+        "est": ["(he/she/it) is", "he is", "she is", "it is", "he's", "she's", "it's", "is"]
+    },
+    { // Chapter 2
+        "cado": ["fall", "i fall"],
+        "cibus": ["food"],
+        "duco": ["i lead", "lead", "take", "i take"],
+        "et": ["and"],
+        "filia": ["daughter"],
+        "filius": ["son"],
+        "forum": ["forum", "market", "marketplace"],
+        "habeo": ["i have", "i hold", "hold", "have"],
+        "habito": ["live", "i live"],
+        "intro": ["enter", "i enter"],
+        "magnus": ["big", "large", "great"],
+        "pecunia": ["money", "sum of money"],
+        "quaero": ["search for", "look for", "ask", "i search for", "i look for", "i ask", "search", "look"],
+        "quoque": ["also", "too"],
+        "saluto": ["greet", "i greet"],
+        "sed": ["but"],
+        "specto": ["i look at", "look at", "watch", "i watch"],
+        "video": ["see"],
+        "vinum": ["wine"],
+        "voco": ["call", "i call"]
+    },
+    { // Chapter 3
+        "ambulo": ["walk", "i walk"],
+        "amicus": ["friend"],
+        "ancilla": ["slave", "enslaved person"],
+        "clamo": ["shout", "i shout"],
+        "clamor": ["shout", "shouting", "noise"],
+        "cum": ["with"],
+        "curro": ["run", "i run"],
+        "dico": ["say", "speak", "tell", "i say", "i speak", "i tell"],
+        "equus": ["horse"],
+        "festino": ["hurry", "i hurry"],
+        "gladius": ["sword"],
+        "infelix": ["unlucky", "unhappy"],
+        "laetus": ["happy"],
+        "multus": ["much", "many"],
+        "omnis": ["all", "every"],
+        "per": ["through", "doing"],
+        "primus": ["first", "1st"],
+        "senator": ["senator"],
+        "urbs": ["city"],
+        "vinco": ["conquer", "win", "victorious", "i conquer", "i win", "i am victorious"]
+    },
+    { // Chapter 4
+        "ad": ["to", "towards", "at"],
+        "adsum": ["i am here", "i am present", "i'm here", "i'm present"],
+        "deus": ["god"],
+        "dominus": ["master"],
+        "donum": ["gift", "present"],
+        "laudi": ["praise", "i praise"],
+        "nos": ["we", "us"],
+        "pravus": ["small"],
+        "periculum": ["danger"],
+        "perterritus": ["terrified"],
+        "puella": ["girl"],
+        "quod": ["become"],
+        "rex": ["king"],
+        "romanus": ["roman"],
+        "subito": ["suddenly"],
+        "templum": ["temple"],
+        "teneo": ["i hold", "i keep", "i possess", "hold", "keep", "possess"],
+        "tollo": ["i raise", "i lift up", "i hold up", "rase", "lift up", "hold up"],
+        "venio": ["come", "i come"],
+        "vos": ["you"]
+    },
+    { // Chapter 5
+        "aqua": ["water"],
+        "audio": ["listen to", "hear", "listen"],
+        "cupio": ["want", "desire"],
+        "custos": ["guard"],
+        "debeo": ["owe"],
+        "do": ["give"],
+        "effugio": ["escape"],
+        "iuvenis": ["young person"],
+        "maneo": ["remain", "stay"],
+        "nemo": ["no one", "nobody"],
+        "nolo": ["don't want", "refuse"],
+        "nox": ["night"],
+        "porto": ["carry", "bear", "take"],
+        "possum": ["can", "am able"],
+        "pulcher": ["beautiful", "handsome"],
+        "respondeo": ["reply"],
+        "taceo": ["am silent", "am quiet"],
+        "timeo": ["fear", "am afraid"],
+        "vendo": ["sell"],
+        "volo": ["want","wish","am willing"]
+    },
+    { // Chapter 6
+        "a": ["from", "away from"],
+        "capio": ["take","catch","capture","adopt"],
+        "dies": ["day"],
+        "discedo": ["depart","leave"],
+        "ex": ["from", "out of"],
+        "exspecto": ["wait for", "expect"],
+        "facio": ["make", "do"],
+        "iam": ["now", "already"],
+        "in (acc.)": ["into", "onto"],
+        "inquit": ["says"],
+        "maritus": ["husband"],
+        "mater": ["mother"],
+        "prope (acc.)": ["near"],
+        "rogo": ["ask", "ask for"],
+        "sedeo": ["sit"],
+        "sto": ["stand"],
+        "totus": ["whole"],
+        "tristis": ["sad"],
+        "tuus": ["your", "yours"],
+        "uxor": ["wife"]
+    },
+    { // Chapter 7
+        "appropinquo": ["approach", "come near"],
+        "cur?": ["why", "why?"],
+        "epistula": ["letter"],
+        "homo": ["man", "person"],
+        "ingens": ["huge"],
+        "miles": ["soldier"],
+        "minime": ["no"],
+        "narro": ["tell", "relate"],
+        "nauta": ["sailor"],
+        "nunc": ["now"],
+        "olim": ["once", "some time ago"],
+        "pars": ["part"],
+        "puer": ["boy"],
+        "pugno": ["fight"],
+        "res": ["thing", "story"],
+        "saepe": ["often"],
+        "silva": ["wood", "forest"],
+        "tum": ["then"],
+        "vehementer": ["loudly", "violently", "strongly"]
+    }
+]
+const getRandomKey = (obj) => Object.keys(currentChapterList)[Math.floor(Math.random()*Object.keys(currentChapterList).length)];
+
+const alertNew = str =>  document.getElementById("alerts").innerHTML = str;
+
+function submitAnswer(given) {
+    if (currentSolution.includes(given.toLowerCase())) {
+        alertNew("Correct!");
+        numberCorrect+=1;
+    } else {
+        alertNew("Incorrect. The correct answer is " + currentSolution);
+        numberIncorrect+=1;
+    }
+    display();
+    runOne();
+}
+function submitMC() {
+    event.preventDefault();
+    var chosen = document.getElementsByName("choice");
+    for (var i=0; i<chosen.length; i++) {
+        if (chosen[i].checked) {
+            submitAnswer(chosen[i].value.split(",")[0]);
+            break;
+        }
+    }
+}
+function runOne() {
+    currentWord = getRandomKey(currentChapterList);
+    currentSolution = currentChapterList[currentWord];
+    latinword.innerHTML = currentWord;   
+    if(Math.random() >= 0.5) {
+        multiplechoice.style.display="none";
+        manualinput.style.display="inline-block";
+    } else {
+        multiplechoice.style.display="inline-block";
+        manualinput.style.display="none";
+        var answers = [currentSolution.join(",")];
+        for(var _=0; _<3; _++) {
+            answers.push(currentWords[Object.keys(currentWords)[randomExcluded(0,Object.keys(currentWords).length,[Object.keys(currentWords).indexOf(currentWord), ...(answers.map(e => Object.keys(currentWords).indexOf(e)))])]]);
+        }
+        var done = Math.floor(Math.random()*4);
+        shuffleArray(answers);
+        ansA.value=answers[0]; answerA.innerHTML=answers[0];
+        ansB.value=answers[1]; answerB.innerHTML=answers[1];
+        ansC.value=answers[2]; answerC.innerHTML=answers[2];
+        ansD.value=answers[3]; answerD.innerHTML=answers[3];
+    }
+}
+function display() {
+    numcorr.innerHTML = numberCorrect;
+    numincorr.innerHTML = numberIncorrect;
+    timespent.innerHTML = timeSpent;
+}
+document.getElementById("usertranslation")
+    .addEventListener("keyup", function(event) {
+    event.preventDefault();
+    if (event.keyCode === 13) {
+        document.getElementById("submitanswer").click();
+    }
+});
+document.addEventListener('keyup', (event) => {
+    event.preventDefault();
+    switch(event.which) {
+        case 49:
+            submitAnswer(ansA.value.split(",")[0]);
+            break;
+        case 50:
+            submitAnswer(ansB.value.split(",")[0]);
+            break;
+        case 51:
+            submitAnswer(ansC.value.split(",")[0]);
+            break;
+        case 52:
+            submitAnswer(ansD.value.split(",")[0]);
+            break;
+    }
+}, false);
+const chaptersDone = chapterData.length;
+var allWords = [];
+var currentChapterList = {};
+var currentWords = [];
+var currentWord, currentSolution;
+var whichChapters = [];
+function submitChapters() {
+    for(var i=0; i<chaptersDone; i++) {
+        if(document.getElementById(`chapter${i+1}`).checked) whichChapters.push(i);
+    }
+    whichChapters.forEach((e) => {
+        currentChapterList = {...currentChapterList, ...chapterData[e]};
+    });
+    Object.keys(currentChapterList).forEach((e) => {
+        currentWords = currentWords.concat(currentChapterList[e]);
+    });
+    selectchapters.style.display="none";
+    mainthing.style.display="inline-block";
+    runOne();
+}
+
+</script>
+</body>
+
+</html>
